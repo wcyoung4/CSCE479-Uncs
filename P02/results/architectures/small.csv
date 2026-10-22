@@ -1,0 +1,12 @@
+stage,configuration
+Input,"RGB image, 32 x 32 x 3 (NHWC)"
+Scaling,"Rescaling(1/255), from 0-255 pixels to 0-1"
+Augmentation,Horizontal flip; +/-10% H/W translation (reflect fill; training only)
+Conv block 1,"Conv2D(32, 3x3, stride 1, same, bias=True) -> ReLU
+-> MaxPool2D(2x2, stride 2) -> Dropout(d)"
+Conv block 2,"Conv2D(64, 3x3, stride 1, same, bias=True) -> ReLU
+-> MaxPool2D(2x2, stride 2) -> Dropout(d)"
+Classifier,"Flatten -> Dense(256, ReLU) -> Dropout(d)"
+Output,"Dense(100, Softmax)"
+Regularization,"L2 = 5e-04 on Conv2D and hidden Dense kernels; d in {0.0, 0.3}; omit Dropout if d=0"
+Defaults,Glorot-uniform kernels; zero-initialized biases

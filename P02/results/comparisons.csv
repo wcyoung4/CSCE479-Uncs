@@ -1,0 +1,13 @@
+comparison,metric,model_a,model_b,error_a,error_b,difference,ci_low,ci_high,significant
+dropout 0.3 vs none,test_accuracy,small_lr1e-03_do0.3,small_lr1e-03_do0.0,0.5997,0.5564,0.0433,0.03465720993893731,0.051942790061062685,True
+dropout 0.3 vs none,test_accuracy,small_lr1e-04_do0.3,small_lr1e-04_do0.0,0.5525,0.5548,-0.0023,-0.01022070511700537,0.005620705117005371,False
+lr 1e-03 vs 1e-04,test_accuracy,small_lr1e-03_do0.3,small_lr1e-04_do0.3,0.5997,0.5525,0.0472,0.03928712148771163,0.05511287851228837,True
+dropout 0.3 vs none,test_accuracy,deep_lr1e-03_do0.3,deep_lr1e-03_do0.0,0.6946,0.4291,0.2655,0.2544118423404053,0.2765881576595947,True
+dropout 0.3 vs none,test_accuracy,deep_lr1e-04_do0.3,deep_lr1e-04_do0.0,0.3755,0.4096,-0.0341,-0.04322945374066599,-0.024970546259334005,True
+lr 1e-03 vs 1e-04,test_accuracy,deep_lr1e-03_do0.3,deep_lr1e-04_do0.3,0.6946,0.3755,0.3191,0.30847787479151206,0.3297221252084879,True
+deep vs small,test_accuracy,deep_lr1e-03_do0.0,small_lr1e-03_do0.0,0.4291,0.5564,-0.1273,-0.13783166897498872,-0.11676833102501127,True
+deep vs small,test_accuracy,deep_lr1e-03_do0.3,small_lr1e-03_do0.3,0.6946,0.5997,0.0949,0.08447467391681228,0.10532532608318772,True
+deep vs small,test_accuracy,deep_lr1e-04_do0.0,small_lr1e-04_do0.0,0.4096,0.5548,-0.1452,-0.1551157900160685,-0.13528420998393148,True
+deep vs small,test_accuracy,deep_lr1e-04_do0.3,small_lr1e-04_do0.3,0.3755,0.5525,-0.177,-0.18681754764613742,-0.16718245235386256,True
+best vs runner-up,test_accuracy,deep_lr1e-04_do0.3,deep_lr1e-04_do0.0,0.3755,0.4096,-0.0341,-0.04322945374066599,-0.024970546259334005,True
+best vs runner-up,test_top5_accuracy,deep_lr1e-04_do0.3,deep_lr1e-04_do0.0,0.119,0.1505,-0.0315,-0.038057040545709006,-0.024942959454290998,True
