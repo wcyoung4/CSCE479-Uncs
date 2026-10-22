@@ -65,13 +65,13 @@ testing_set = prepare_data(raw_test)
 
 #architectures
 for arch_name, arch in architectures.items():
-    model = build_model(arch, max(dropouts), learning_rates[0], l2_weight, augment)
-    table = util.architecture_table(model)
+    table = util.architecture_table(arch, dropouts, l2_weight, augment)
     util.write_csv(table, arch_path + arch_name + '.csv')
     util.plot_architecture_table(table, figure_path + 'architecture_' + arch_name + '.png',
-                                 title='%s network (%d parameters, dropout layers only when rate > 0)' % (arch_name, model.count_params()))
+                                 title='%s CNN architecture' % arch_name.title())
     print('\n' + arch_name + ' architecture:\n')
     util.print_table(table)
+
 
 results = []
 histories = {}
