@@ -94,58 +94,69 @@ def print_table(rows):
 
 
 #architectures
-def _layer_details(layer):
-    cfg = layer.get_config()
-    kind = layer.__class__.__name__
-    if kind == 'Conv2D':
-        return '%d filters, %dx%d, %s' % (cfg['filters'], cfg['kernel_size'][0], cfg['kernel_size'][1], cfg['padding'])
-    if kind == 'Dense':
-        return '%d units, %s' % (cfg['units'], layer.activation.__name__)
-    if kind == 'MaxPooling2D':
-        return '%dx%d pool' % tuple(cfg['pool_size'])
-    if kind == 'Dropout':
-        return 'rate %s' % cfg['rate']
-    if kind == 'Activation':
-        return layer.activation.__name__
-    if kind == 'Rescaling':
-        return 'x / 255'
-    if kind == 'RandomFlip':
-        return cfg['mode'] + ' (train only)'
-    if kind == 'RandomTranslation':
-        return '+/- %s shift (train only)' % cfg['height_factor']
-    return ''
+def architecture_table(arch, dropouts, l2_weight, augment):
+    rows = [
+        {'stage': 'Input', 'configuration': 'RGB image, 32 x 32 x 3 (NHWC)'},
+        {'stage': 'Scaling', 'configuration': 'Rescaling(1/255), from 0-255 pixels to 0-1'},
+    ]
+    if augment:
+        rows.append({'stage': 'Augmentation',
+                     'configuration': 'Horizontal flip; +/-10% H/W translation (reflect fill; training only)'})
 
+    for i, filters in enumerate(arch['filters']):
+        bias = 'False' if arch['batch_norm'] else 'True'
+        conv = 'Conv2D(%d, 3x3, stride 1, same, bias=%s)' % (filters, bias)
+        if arch['batch_norm']:
+            conv += ' -> BatchNorm -> ReLU'
+        else:
+            conv += ' -> ReLU'
+        if arch['convs_per_block'] > 1:
+            conv = '%d x [%s]' % (arch['convs_per_block'], conv)
+        rows.append({'stage': 'Conv block %d' % (i + 1),
+                     'configuration': conv + '\n-> MaxPool2D(2x2, stride 2) -> Dropout(d)'})
 
-def architecture_table(model):
-    rows = []
-    for i, layer in enumerate(model.layers):
-        rows.append({'#': i + 1,
-                     'layer': layer.__class__.__name__,
-                     'details': _layer_details(layer),
-                     'output_shape': str(tuple(layer.output.shape[1:])),
-                     'params': layer.count_params()})
+    classifier = 'Flatten'
+    for size in arch['dense']:
+        classifier += ' -> Dense(%d, ReLU) -> Dropout(d)' % size
+    rows.append({'stage': 'Classifier', 'configuration': classifier})
+    rows.append({'stage': 'Output', 'configuration': 'Dense(100, Softmax)'})
+    rows.append({'stage': 'Regularization',
+                 'configuration': 'L2 = %.0e on Conv2D and hidden Dense kernels; d in {%s}; omit Dropout if d=0'
+                                  % (l2_weight, ', '.join(str(d) for d in dropouts))})
+    defaults = 'Glorot-uniform kernels; zero-initialized biases'
+    if arch['batch_norm']:
+        defaults += '; BatchNorm momentum=0.99, epsilon=0.001'
+    rows.append({'stage': 'Defaults', 'configuration': defaults})
     return rows
 
 
 def plot_architecture_table(rows, path, title):
     columns = list(rows[0].keys())
     cells = [[str(row[c]) for c in columns] for row in rows]
-    total = sum(row['params'] for row in rows)
-    cells.append(['', 'Total', '', '', str(total)])
-    fig, ax = plt.subplots(figsize=(8.5, 0.32 * len(cells) + 0.9))
+    heights = [0.36 if '\n' not in cell[1] else 0.63 for cell in cells]
+    fig_height = 1.0 + sum(heights) + 0.36
+    fig, ax = plt.subplots(figsize=(10.5, fig_height))
     ax.axis('off')
-    table = ax.table(cellText=cells, colLabels=columns, loc='center', cellLoc='left',
-                     colWidths=[0.05, 0.22, 0.35, 0.22, 0.13])
+    table = ax.table(cellText=cells, colLabels=['Stage', 'Configuration'],
+                     loc='center', cellLoc='left', colWidths=[0.18, 0.82],
+                     bbox=[0.0, 0.03, 1.0, 0.88])
     table.auto_set_font_size(False)
-    table.set_fontsize(8)
-    table.scale(1, 1.25)
+    table.set_fontsize(9)
     for (r, c), cell in table.get_celld().items():
-        if r == 0 or r == len(cells):
-            cell.set_text_props(weight='bold')
+        if r == 0:
             cell.set_facecolor('#e6eef7')
-    ax.set_title(title, fontsize=10)
-    fig.tight_layout()
-    fig.savefig(path, dpi=200, bbox_inches='tight')
+            cell.set_text_props(weight='bold')
+        elif r % 2 == 0:
+            cell.set_facecolor('#f5f7fa')
+        if c == 0 and r != 0:
+            cell.set_text_props(weight='bold')
+        cell.PAD = 0.025
+    total = sum(heights) + 0.37
+    for i, height in enumerate([0.37] + heights):
+        for j in range(2):
+            table[i, j].set_height(height / total * 0.88)
+    fig.suptitle(title, fontsize=13, fontweight='bold', y=0.975)
+    fig.savefig(path, dpi=200, bbox_inches='tight', pad_inches=0.16)
     plt.close(fig)
 
 
